@@ -21,7 +21,7 @@ export interface AsyncState<T> {
     error?: Error;
     loading: boolean;
 };
-export function useAsync<T>(fn: () => Promise<T>, deps: React.DependencyList = []) {
+export function useAsync<T>(fn: () => Promise<T>, deps: React.DependencyList = []): AsyncState<T> {
     const asyncManager = useAsyncManager();
     if((asyncManager as any).ssrMode && asyncManager.loaded)
         return (asyncManager as any).getCache();
