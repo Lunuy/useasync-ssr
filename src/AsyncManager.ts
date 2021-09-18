@@ -1,31 +1,42 @@
 
 
-
 export class AsyncManager {
     private promises: Promise<any>[];
-    private caches: any[]; 
-    public loaded: boolean;
+    private caches: any[];
     private currentIndex: number;
-    public constructor(private readonly ssrMode: boolean = true) {
+    public readonly isClientMode;
+    public constructor(isClientMode: boolean = false) {
         this.promises = [];
         this.caches = [];
-        this.loaded = false;
         this.currentIndex = 0;
+        this.isClientMode = isClientMode;
     }
 
+    // SERVER SIDE
     public async load() {
         this.caches = await Promise.all(this.promises);
-        this.loaded = true;
-        return;
+        return this.caches;
     }
     
+    // SERVER SIDE (INTERNAL)
     private addPromise(promise: Promise<any>) {
         this.promises.push(promise);
         return promise;
     }
+
+    // CLIENT SIDE (INTERNAL)
+    private setCaches(caches: any[]) {
+        this.caches = caches;
+    }
+
+    // BOTH SIDE (INTERNAL)
     private getCache() {
-        if(this.currentIndex === this.caches.length)
-            throw new Error("You can't use AsyncManager for SSR multiple times.");
-        return this.caches[this.currentIndex++];
+        const cache = this.caches[this.currentIndex];
+        this.currentIndex++;
+
+        return cache;
+    }
+    private isCacheExists() {
+        return this.currentIndex !== this.caches.length;
     }
 }

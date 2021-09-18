@@ -21,29 +21,37 @@ export interface AsyncState<T> {
     error?: Error;
     loading: boolean;
 };
-export function useAsync<T>(fn: () => Promise<T>, deps: React.DependencyList = []): AsyncState<T> {
+export function useAsync<T>(fn: () => Promise<T>, deps: React.DependencyList = [], clientOnly = false): AsyncState<T> {
     const asyncManager = useAsyncManager();
-    if((asyncManager as any).ssrMode && asyncManager.loaded)
-        return (asyncManager as any).getCache();
 
     const idRef = useRef(0);
     const isMounted = useMountedState();
-    const [state, setState] = useState<AsyncState<T>>({ loading: true });
+    const [state, setState] = useState<AsyncState<T>>(
+        !clientOnly && (asyncManager as any).isCacheExists()
+        ?
+            (asyncManager as any).getCache()
+        :
+            { loading: true }
+    );
 
     useEffect(() => {
         const id = ++idRef.current;
+
+        // If first useEffect call with loaded state, keep state. (State is already filled by SSR cache)
+        if(id === 1 && !state.loading)
+            return;
+
         fn().then(
             value => isMounted() && id === idRef.current && setState({ value, loading: false }),
             error => isMounted() && id === idRef.current && setState({ error, loading: false })
         );
     }, deps);
-
-    if((asyncManager as any).ssrMode) {
+    
+    if(!clientOnly && !asyncManager.isClientMode && state.loading)
         (asyncManager as any).addPromise(fn().then(
             value => ({ value, loading: false }),
             error => ({ error, loading: false })
         ));
-    }
     
     return state;
 }
