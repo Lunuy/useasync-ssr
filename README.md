@@ -33,29 +33,34 @@ export const Count1 = () => {
 const app = express();
 
 app.get('/render', async (req, res) => {
+    const path = req.query.path;
+
     const asyncManager = new AsyncManager();
 
     const Tree = (
         <AsyncProvider asyncManager={asyncManager}>
-            <App/>
+            <StaticRouter location={path}>
+                <App/>
+            </StaticRouter>
         </AsyncProvider>
     );
 
     // Scan tree
     ReactDOM.renderToString(Tree);
     Helmet.renderStatic();
+    StatusCode.rewind();
 
-    // Load async requests & save caches
+    // Load async requests
     const caches = await asyncManager.load();
 
     // Filled content
     const content = ReactDOM.renderToString(Tree);
+    const helmet = Helmet.renderStatic();
+    const status = StatusCode.rewind() ?? 200;
 
-    // Make html with useAsync caches
     const html = <Html content={content} helmet={helmet} caches={caches}/>;
 
-    // Send!
-    res.status(200);
+    res.status(status);
     res.send(`<!doctype html>\n${ReactDOM.renderToString(html)}`);
     res.end();
 });
