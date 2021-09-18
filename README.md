@@ -5,7 +5,7 @@ React useAsync for SSR. You can use [useAsync](https://github.com/streamich/reac
 When first `ReactDOM.renderToString` called, `AsyncManager` saves promises that requested in react tree. Then when `asyncManager.load` called, await all promises resolved or rejected. Next render, `AsyncManager` will fill async values. Then you can get filled html.
 
 # Usage
-Client
+## Client
 ```tsx
 import { Helmet } from "react-helmet";
 import { useAsync } from "useasync-ssr";
@@ -28,6 +28,7 @@ export const Count1 = () => {
     )
 };
 ```
+## Server
 ```tsx
 const app = express();
 
